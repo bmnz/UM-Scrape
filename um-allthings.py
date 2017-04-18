@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import sqlite3
-import urllib.request
+import urllib2
 
 def main():
     """Main function to read through data and run some debug stuff from the interactive python shell."""
@@ -13,8 +13,13 @@ def get_string_from_file(filename):
     return filestring
 
 def get_soup_from_file(filename):
-    soup = BeautifulSoup(get_string_from_file(filename), 'html.parser')
-    return soup
+    return BeautifulSoup(get_string_from_file(filename), 'html.parser')
+
+
+def get_soup_from_url(url):
+    response = urllib2.urlopen(url)
+    html = response.read() 
+    return BeautifulSoup(html, 'html.parser')
 
 def get_soup_show_name(show):
     #show is a soup object
@@ -43,10 +48,11 @@ def get_soup_show_songs(show):
 def db_populate_songs_table(soup,filename):
     conn = sqlite3.connect('um.db')
     dbcurs = conn.cursor()
-    dbcurs.execute("CREATE TABLE songs(dbid INT, song TEXT, show TEXT, track INT)")
-
-    #This dbid only good for one pass-through
-    dbid = 0
+    #dbcurs.execute("CREATE TABLE songs(dbid INT, song TEXT, show TEXT, track INT)")
+    #Need to come up with a new dbid... by querying for the largest existing?
+    dbcurs.execute("SELECT MAX(dbid) FROM songs")
+    foo = dbcurs.fetchone()
+    dbid = foo[0]
     for show in allthings_soup.find_all(class_='setlist'):
         #fill variables that are same for shows, then move on to songs
         show_name = get_soup_show_name(show)
@@ -65,11 +71,13 @@ if __name__ == "__main__":
     #Parse html with beautiful soup
     file_allthings = '2017.html'
     file_db = 'um.db'
-    #allthings_soup = get_soup_from_file(file_allthings)
-    #allthings_soup = get_soup_from_http(http_allthings)
-    #for site in http_allthings_sites:
-        #allthings_soup = get_soup_from_http(site)
-        #db_populate_songs_table(allthings_soup,file_db)
+    url_allthings_base = 'http://allthings.umphreys.com/setlists/'
+    #allthings_soup = get_soup_from_url(http_allthings)
+    for year in range(1998,2017):
+        site = url_allthings_base + str(year) + '.html'
+        allthings_soup = get_soup_from_url(site)
+        db_populate_songs_table(allthings_soup,file_db)
     #print(allthings_soup.prettify())
     #db_populate_songs_table(allthings_soup,file_db)
+    allthings_soup = get_soup_from_file(file_allthings)
 

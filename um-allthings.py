@@ -66,17 +66,22 @@ def db_populate_songs_table(soup,filename):
     conn.commit()
     conn.close()
 
+def allthings_setlists_year_url(year):
+    url_allthings_base = 'http://allthings.umphreys.com/setlists/'
+    return url_allthings_base + str(year) + '.html'
+    
+def db_populate_setlist_year(year, db_filename):
+    allthings_soup = get_soup_from_url(allthings_setlist_year_url(year))
+    db_populate_songs_table(allthings_soup,file_db)
+
 
 if __name__ == "__main__":
     #Parse html with beautiful soup
     file_allthings = '2017.html'
     file_db = 'um.db'
-    url_allthings_base = 'http://allthings.umphreys.com/setlists/'
     #allthings_soup = get_soup_from_url(http_allthings)
-    for year in range(1998,2017):
-        site = url_allthings_base + str(year) + '.html'
-        allthings_soup = get_soup_from_url(site)
-        db_populate_songs_table(allthings_soup,file_db)
+    #for year in range(1998,2017):
+    #    db_populate_setlist_year(year, file_db)
     #print(allthings_soup.prettify())
     #db_populate_songs_table(allthings_soup,file_db)
     allthings_soup = get_soup_from_file(file_allthings)
